@@ -1,0 +1,29 @@
+from django.contrib import admin
+
+# Register your models here.
+
+from .models import IncomingPallet
+from .models import Location
+from .models import WorkStation
+from .models import Battery, BatteryTest
+
+
+class IncomingPalletAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "serial_number"
+        ]
+    search_fields = list_display
+admin.site.register(IncomingPallet, IncomingPalletAdmin)
+
+admin.site.register(Location)
+
+class WorkStationAdmin(admin.ModelAdmin):
+    list_display = [
+        "host_name",
+        "code",
+        " location_id"
+        ]
+admin.site.register(WorkStation, WorkStationAdmin)
+admin.site.register(Battery)
+admin.site.register(BatteryTest)

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Battery Station 1</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+        <!-- Importing Bootstrap CSS -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet"/>
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.bundle.min.js"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+    </head>
+    <body>
+        <div id="app" class="container-fluid text-center">
+            <h3 class="justify-content-center">Battery Work Station {{ hostName}}</h3>
+            <h5 class="justify-content-center">{{ palletNumber}}</h5>
+      
+            <!-- Numeric Keypad Modal -->
+            <div class="modal fade" id="numericKeypadModal" tabindex="-1" role="dialog" aria-labelledby="numericKeypadModalLabel" 
+            aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="numericKeypadModalLabel">
+                      Enter Amended Voltage
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body text-center">
+                    <div class="keypad">
+                      <!-- Display the entered value -->
+                      <input
+                        type="text"
+                        class="form-control mb-3"
+                        v-model="tempAmendedVoltage"
+                        readonly
+                      />
+      
+                      <table class="table">
+                        <tr>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(1)"
+                            >
+                              1
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(2)"
+                            >
+                              2
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(3)"
+                            >
+                              3
+                            </button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(4)"
+                            >
+                              4
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(5)"
+                            >
+                              5
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(6)"
+                            >
+                              6
+                            </button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(7)"
+                            >
+                              7
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(8)"
+                            >
+                              8
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(9)"
+                            >
+                              9
+                            </button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendNumber(0)"
+                            >
+                              0
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-secondary btn-xl"
+                              @click="appendDecimal()"
+                            >
+                              .
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-danger btn-xl"
+                              @click="clearInput()"
+                            >
+                              Clear
+                            </button>
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-dismiss="modal"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      @click="confirmAmendedVoltage"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+      
+            <div v-if="showCountdown" class="box">
+              <div class="circle"></div>
+              <div class="countdown-number">{{ countdownNumber }}</div>
+            </div>
+            <form>
+              <table class="table table-bordered">
+                <tr>
+                  <td>
+                    <!--              <label for="scannedSerial">Scanned Serial Number</label>-->
+                    <input
+                      type="text"
+                      class="form-control input-large"
+                      maxlength="14"
+                      v-model="scannedSerial"
+                      id="scannedSerial"
+                      placeholder="Scanned Serial"
+                      readonly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="form-control input-large"
+                      maxlength="6"
+                      v-bind:class="{ 'invalid-input': !isAmendedSerialDateValid && amendedSerialDate.length > 0 }"
+                      v-model="amendedSerialDate"
+                      id="amendedSerialDate"
+                      placeholder="amendedSerialDate"
+                    />
+                  </td>
+      
+                  <td>
+                    <div
+                      class="bg-light border text-center d-inline-block"
+                      style="width: 400px; height: 100px"
+                    >
+                      <img
+                        v-if="!snImageError"
+                        :src="snImageSrc"
+                        @error="snImageError = true"
+                        @load="snImageError = false"
+                        alt="Serial Number Image"
+                      />
+                      <p v-if="snImageError">Awaiting Serial Number Image</p>
+                    </div>
+                  </td>
+      
+                  <td>
+                    <input
+                      type="text"
+                      class="form-control input-large"
+                      maxlength="4"
+                      v-bind:class="{ 'invalid-input': !isAmendedSerialNumberValid && amendedSerialNumber.length > 0 }"
+                      v-model="amendedSerialNumber"
+                      id="amendedSerialNumber"
+                      placeholder="Amended Serial Number"
+                    />
+                  </td>
+                  <td>
+                    <!--              <label for="amendedSerial">Amended Serial Number</label>-->
+      
+                    <input
+                      type="text"
+                      class="form-control input-large"
+                      v-model="amendedSerial"
+                      id="amendedSerial"
+                      placeholder="Amended Serial "
+                      readonly
+                    />
+                  </td>
+                </tr>
+      
+                <tr>
+                  <td>
+                    <input
+                      type="text"
+                      class="form-control input-large"
+                      maxlength="5"
+                      v-model="scannedVoltage"
+                      id="scannedVoltage"
+                      placeholder="Scanned Voltage"
+                      readonly
+                    />
+                  </td>
+      
+                  <td colspan="3">
+                    <div
+                      class="bg-light border text-center d-inline-block"
+                      style="width: 577px; height: 319px"
+                    >
+                      <img
+                        v-if="!lcdImageError"
+                        :src="lcdImageSrc"
+                        @error="lcdImageError = true"
+                        @load="lcdImageError = false"
+                        alt="LCD Voltage Reading Image"
+                      />
+                      <p v-if="lcdImageError">Awaiting Voltage Reading Image</p>
+                    </div>
+                  </td>
+      
+                  <td>
+                    <input
+                      type="text"
+                      class="form-control input-large"
+                      maxlength="5"
+                      v-model="amendedVoltage"
+                      id="amendedVoltage"
+                      placeholder="Enter Amended Voltage"
+                      @click="showNumericKeypad"
+                    />
+                  </td>
+                </tr>
+              </table>
+      
+              <p />
+      
+              <!--            <button type="submit" class="btn btn-primary fas fa-coffee" @click.prevent="fakeRead">Fake Read</button>-->
+              <!--            <button type="submit" class="btn btn-primary fas fa-camera" @click.prevent="readAll"></button>-->
+              <!--            <button type="submit" class="btn btn-success fas fa-check" @click.prevent="submitForm"></button>-->
+      
+              <div class="container-fluid">
+                <div class="row justify-content-between">
+                  <!-- Blue Button on the left -->
+                  <div class="col-auto">
+                    <button
+                      type="submit"
+                      class="btn btn-primary fas fa-camera custom-btn"
+                      @click.prevent="readAll"
+                    ></button>
+                  </div>
+      
+                  <!-- Fake Read Button in the center (optional) -->
+                  <div class="col-auto">
+                    <table>
+                      <tr>
+                        <td>
+                          <div class="form-group form-check large-checkbox">
+                            <input
+                              type="checkbox"
+                              class="form-check-input"
+                              v-model="cleaningRequired"
+                              id="cleaningCheck"
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>&nbsp;</td>
+                      </tr>
+                      <tr>
+                        <td>&nbsp;</td>
+                      </tr>
+                      <tr>
+                        <td>&nbsp;</td>
+                      </tr>
+                      <tr>
+                        <td>&nbsp;</td>
+                      </tr>
+                      <tr>
+                        <td>&nbsp;</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <img src="cleaning.png" width="200" height="200" />
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+      
+                  <!-- Green Button on the right -->
+      
+                  <div class="col-auto">
+                    <button
+                      type="submit"
+                      :class="buttonClass"
+                      @click.prevent="submitForm"
+                    >
+                      <i :class="iconClass"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <h4 class="mt-1 alert alert-primary" v-html="msg || 'Waiting ...'"></h4>
+      
+              <button
+                type="submit"
+                class="btn btn-primary fas fa-coffee custom-button"
+            
+                @click.prevent="fakeRead"
+              >
+                Fake Read
+              </button>
+            </form>
+          </div>
+      
+          <script>
+                        new Vue({
+                            el: '#app',
+                            data: {
+                                logo: 1,
+                                hostName: "",
+                                connected: false,
+                                websocket: null,
+                                palletNumber: 'Awaiting Scan or Image Capture for Pallet Number',
+                                scannedSerial: '',
+                                amendedSerial: '',
+                                amendedSerialDate: '',
+                                amendedSerialNumber: '',
+                                scannedVoltage: '',
+                                amendedVoltage: '',
+                                tempAmendedVoltage: '', // Temporary storage for modal input
+                                cleaningRequired: false,
+                                ok: true,
+                                msg: '',
+                                showCountdown: false,
+                                countdownNumber: 0,
+                                snImageError: false,
+                                snImageSrc: "serial_number.jpg",
+                                lcdImageError: false,
+                                lcdImageSrc: "lcd.jpg",
+                            },
+      
+                          computed: {
+              isFormValid() {
+                return this.isAmendedSerialDateValid && this.isAmendedSerialNumberValid;
+              },
+              // Computed property to dynamically update amendedSerial
+              updatedAmendedSerial() {
+                return `${this.amendedSerialDate}E8C ${this.amendedSerialNumber}`;
+              },
+                                // Validation for the amendedSerialDate (DDMMYY format)
+              isAmendedSerialDateValid() {
+                const regex = /^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{2}$/; // DDMMYY regex
+                return regex.test(this.amendedSerialDate);
+              },
+      
+              // Validation for the amendedSerialNumber (exactly four digits)
+              isAmendedSerialNumberValid() {
+                const regex = /^\d{4}$/; // Exactly four digits
+                return regex.test(this.amendedSerialNumber);
+              },
+      
+            // Validation for the amendedVoltage (less than 12.5 = red, 12.5 or above = amber)
+            isAmendedVoltageValid() {
+              const voltage = parseFloat(this.amendedVoltage);
+              if (!this.amendedVoltage || isNaN(voltage)) {
+                return "invalid"; // If empty or not a number, treat as invalid
+              } else if (voltage < 5) {
+                return "invalid"; // If less than 12.5, invalid
+              } else if (voltage > 12.7) {
+                return "valid"; // If less than 12.5, invalid
+              } else {
+                return "warning"; // Not invalid, not valid (needs charging) warning
+              }
+            },
+          // Dynamically determine the button class (success, warning, or error)
+          buttonClass() {
+            if (this.isFormValid && this.isAmendedVoltageValid === "warning") {
+              return "btn btn-warning custom-btn"; // Amber button if voltage is warning but form is otherwise valid
+            } else if (this.isFormValid && this.isAmendedVoltageValid === "valid") {
+              return "btn btn-success custom-btn"; // Green button if everything is valid
+            } else {
+              return "btn btn-danger custom-btn"; // Red button for invalid form or invalid voltage
+            }
+          },
+      
+          // Dynamically determine the icon class (check or cross)
+          iconClass() {
+            if (this.isFormValid && this.isAmendedVoltageValid !== "invalid") {
+              return "fas fa-check"; // Show check if form and voltage are valid or warning
+            } else {
+              return "fas fa-times"; // Show cross if form or voltage is invalid
+            }
+          },
+      
+            },
+            watch: {
+              // Watch the computed property and set the amendedSerial field
+              updatedAmendedSerial(newVal) {
+                this.amendedSerial = newVal;
+              }
+            },
+      
+                            mounted: function (e) {
+                                // this.timer = setInterval(this.flipLogo, 10000);
+                                this.timer = setInterval(this.wsCheck, 1000);
+                                this.checkImageExistence();
+                                this.wsConnect();
+      
+                            },
+                            methods: {
+      
+                                showNumericKeypad() {
+                                    $('#numericKeypadModal').modal('show');
+                //                    this.tempAmendedVoltage = this.amendedVoltage || ''; // Set the temporary value to the current voltage
+                                    this.tempAmendedVoltage = '';
+                                },
+      
+                                // Append a number to the tempAmendedVoltage
+                                appendNumber(num) {
+                                    this.tempAmendedVoltage += num.toString();
+                                },
+      
+                                // Append a decimal point, if not already present
+                                appendDecimal() {
+                                    if (!this.tempAmendedVoltage.includes('.')) {
+                                        this.tempAmendedVoltage += '.';
+                                    }
+                                },
+      
+                                // Clear the input
+                                clearInput() {
+                                    this.tempAmendedVoltage = '';
+                                },
+      
+                                // Confirm the numeric input from the modal and update the amendedVoltage
+                                confirmAmendedVoltage() {
+                                    this.amendedVoltage = this.tempAmendedVoltage; // Set the actual value
+                                    $('#numericKeypadModal').modal('hide'); // Close the modal
+                                },
+      
+      
+      
+                                checkImageExistence() {
+                                    // Poll the image every 5 seconds to check if it has appeared/disappeared
+                                    setInterval(() => {
+      
+                                        // Check serial number image existance
+                                        const snImg = new Image();
+                                        snImg.src = this.snImageSrc + "?t=" + new Date().getTime(); // Prevent caching issues
+                                        snImg.onload = () => {
+                                            this.snImageError = false;
+                                        };
+                                        snImg.onerror = () => {
+                                            this.snImageError = true;
+                                        };
+      
+                                        // Check lcd image existance
+      
+                                        const lcdImg = new Image();
+                                        lcdImg.src = this.lcdImageSrc + "?t=" + new Date().getTime(); // Prevent caching issues
+                                        lcdImg.onload = () => {
+                                            this.lcdImageError = false;
+                                        };
+                                        lcdImg.onerror = () => {
+                                            this.lcdImageError = true;
+                                        };
+      
+                                    }, 500); // Check every 0.5 seconds
+                                },
+      
+                                prepData(event) {
+                                    data = {
+                                        "event": event,
+                                        "palletNumber": this.palletNumber,
+                                        "scannedSerial": this.scannedSerial,
+                                        "amendedSerial": this.amendedSerial,
+                                        "scannedVoltage": this.scannedVoltage,
+                                        "amendedVoltage": this.amendedVoltage,
+                                        "cleaningRequired": this.cleaningRequired,
+      
+                                    }
+                                    return JSON.stringify(data)
+      
+      
+                                },
+      
+                                startCountdown() {
+                                    this.showCountdown = true;
+                                    this.countdownNumber = 5; // Change this to the number of seconds
+                                    return new Promise((resolve, reject) => {
+                                        this.countdownTimer = setInterval(() => {
+                                            this.countdownNumber--;
+                                            if (this.countdownNumber <= 0) {
+                                                clearInterval(this.countdownTimer);
+                                                this.showCountdown = false;
+                                                resolve(true)
+                                            }
+                                        }, 1000);
+                                    })
+                                },
+                                submitForm() {
+                                    this.webSocket.send(this.prepData("submit"));
+                                },
+                                async readAll() {
+                                    const result = await this.startCountdown();
+                                    this.webSocket.send(this.prepData("read"));
+      
+                                },
+                                async fakeRead() {
+                                    // IJC
+                                    // const result = await this.startCountdown();
+                                    this.webSocket.send(this.prepData("fakeRead"));
+      
+                                },
+                                async rereadVoltage() {
+                                    const result = await this.startCountdown();
+                                    this.webSocket.send(this.prepData("voltage"));
+                                },
+                                rereadSerial() {
+                                    this.webSocket.send(this.prepData("serial"));
+                                },
+                                flipLogo() {
+                                    this.logo += 1
+                                    if (this.logo == 3) {
+                                        this.logo = 1
+                                    }
+                                },
+                                wsCheck() {
+                                    if (this.webSocket.readyState == 1) {
+                                        this.connected = true;
+                                    } else {
+                                        this.connected = false;
+      
+                                    }
+                                    if (this.webSocket.readyState == 3) {
+                                        this.wsConnect();
+                                    }
+                                },
+      
+                                wsConnect() {
+                                    this.webSocket = new WebSocket("ws://localhost:8001/");
+                                    this.webSocket.onopen = () => this.webSocket.send(JSON.stringify({ "event": "connect" }));
+                                    this.webSocket.onmessage = this.handleWSOnMessage;
+                                },
+                                handleWSOnMessage(event) {
+                                    data = JSON.parse(event.data);
+                                    this.msg = data.msg;
+                                    this.ok = data.ok;
+                                    this.hostName = data.hostName;
+                                    this.palletNumber = data.palletNumber || 'Pallet Number not Set';
+                                    this.scannedSerial = data.scannedSerial;
+                                    this.amendedSerial = data.amendedSerial;
+                                    this.scannedVoltage = data.scannedVoltage;
+                                    this.amendedVoltage = data.amendedVoltage;
+      
+      
+                                  this.amendedSerialDate = this.amendedSerial.substring(0, 6);
+      
+      
+                                  this.amendedSerialNumber = this.amendedSerial.slice(-4);
+                                },
+                            }
+                        });
+          </script>
+          <style>
+            /* xl button for keypad input */
+            .btn-xl {
+              padding: 20px 40px; /* Increase padding for a larger button */
+              font-size: 24px; /* Increase the font size */
+              border-radius: 8px; /* Optionally increase border radius for larger look */
+            }
+            .large-checkbox {
+              transform: scale(8);
+              /* Scale the entire checkbox and label */
+            }
+      
+            .large-checkbox input[type="checkbox"] {
+              margin-right: 10px;
+              /* Optional: Adjust margin */
+            }
+      
+            .box {
+              position: fixed;
+              z-index: 999;
+              top: 0;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-size: 10em;
+              color: black;
+              background: radial-gradient(#fff, #757575);
+            }
+      
+            .circle {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              width: 500px;
+              height: 500px;
+              border-radius: 50%;
+              transform: translate(-50%, -50%);
+              border: 5px solid #fff;
+            }
+      
+            .custom-btn {
+              width: 800px;
+              height: 400px;
+              font-size: 10em; /* Adjust font size for the icon to fill the button */
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              padding: 0; /* Remove padding to ensure the icon takes up the entire space */
+            }
+      
+            .input-large {
+              width: 20ch;
+              transform: scale(1.5); /* Scales the input fields by 50% */
+              transform-origin: top left; /* Ensures the scaling starts from the top left */
+            }
+      
+            .invalid-input {
+              background-color: red; /* Red background for invalid fields */
+            }
+          </style>
+        </body>
+    </body>
+</html>
